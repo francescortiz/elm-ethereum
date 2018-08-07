@@ -1,15 +1,10 @@
 # <img src="https://cdn.rawgit.com/cmditch/elm-ethereum/master/elm-ethereum-logo.svg" width="75"> elm-ethereum
 
-**DApps in Pure Elm**
+**Examples:**  
+[Simple starter example](https://github.com/cmditch/elm-ethereum/tree/master/examples/simple/src/Main.elm)  
+[Complex example SPA Dapp](https://github.com/cmditch/elm-ethereum/tree/master/examples/complex) 
 
-
-**Dev Note 5/28/18:**  
-*elm-ethereum* is not quite ready for a 1.0 release.  
-In the mean time, use the [dev version of the package](http://package.elm-lang.org/packages/cmditch/mel-bew3/latest).  
-
-Check out the [simple starter example](https://github.com/cmditch/elm-ethereum/tree/master/examples/simple/Main.elm)  
-
-Cool Feature:  See [here](https://github.com/cmditch/elm-ethereum/blob/master/examples/simple/Main.elm#L138) how you can easily track the block depth of transactions after they've been mined.
+Cool Feature:  See [here](https://github.com/cmditch/elm-ethereum/blob/master/examples/simple/src/Main.elm#L138) how you can easily track the block depth of transactions after they've been mined.
 
 -----------------------
 
@@ -68,11 +63,7 @@ See [why elm?](#why-elm)
             |> Task.mapError prettifyHttpError
 ```  
 
-Do not fret if the above looks perplexing. This is fairly advanced Elm. Lots is going on here.
-Partial function application. Function composition. Maps within maps. Record accessor sugar.
-The point is, your code can be terse, expressive, with great error handling baked in.  
-
-Btw, this is an example of [Railway Oriented Programming](https://fsharpforfunandprofit.com/rop/). A [great video](https://vimeo.com/113707214) by Scott Wlaschin.  
+This is an example of [Railway Oriented Programming](https://fsharpforfunandprofit.com/rop/). A [great video](https://vimeo.com/113707214) by Scott Wlaschin.  
 
 ## Why Elm
 

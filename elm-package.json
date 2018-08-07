@@ -1,5 +1,5 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "summary": "feed the tree some ether.",
     "repository": "https://github.com/cmditch/elm-ethereum.git",
     "license": "BSD3",
@@ -19,8 +19,8 @@
         "Eth.Types",
         "Eth.Units",
         "Eth.Utils",
-        "Evm.Decode",
-        "Evm.Encode",
+        "Abi.Decode",
+        "Abi.Encode",
         "Shh"
     ],
     "dependencies": {
