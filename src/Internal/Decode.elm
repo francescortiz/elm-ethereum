@@ -1,12 +1,12 @@
-module Internal.Decode exposing (..)
+module Internal.Decode exposing (address, bigInt, block, blockHash, blockHead, event, hex, hexBool, hexInt, hexTime, log, nonZero, resultToDecoder, stringInt, syncStatus, tx, txHash, txReceipt, uncle)
 
 import BigInt exposing (BigInt)
 import Eth.Types exposing (..)
-import Eth.Utils exposing (toAddress, toHex, toTxHash, toBlockHash)
+import Eth.Utils exposing (toAddress, toBlockHash, toHex, toTxHash)
 import Hex
-import Internal.Utils exposing (remove0x, add0x)
+import Internal.Utils exposing (add0x, remove0x)
 import Json.Decode as Decode exposing (..)
-import Json.Decode.Pipeline exposing (required, decode, custom, optional)
+import Json.Decode.Pipeline exposing (custom, decode, optional, required)
 import Time exposing (Time)
 
 
@@ -209,7 +209,7 @@ hexBool =
                 _ ->
                     Err <| "Error decoding " ++ n ++ "as bool."
     in
-        resultToDecoder isBool
+    resultToDecoder isBool
 
 
 
@@ -228,7 +228,7 @@ resultToDecoder strToResult =
                 Err error ->
                     Decode.fail error
     in
-        Decode.string |> Decode.andThen convert
+    Decode.string |> Decode.andThen convert
 
 
 {-| -}
@@ -238,9 +238,11 @@ nonZero decoder =
         checkZero str =
             if str == "0x" || str == "0x0" then
                 Decode.succeed Nothing
+
             else if remove0x str |> String.all (\s -> s == '0') then
                 Decode.succeed Nothing
+
             else
                 Decode.map Just decoder
     in
-        Decode.string |> Decode.andThen checkZero
+    Decode.string |> Decode.andThen checkZero
