@@ -1,17 +1,8 @@
-module Abi.Encode
-    exposing
-        ( Encoding
-        , functionCall
-        , functionCallWithDebug
-        , address
-        , uint
-        , int
-        , bool
-        , staticBytes
-        , ipfsHash
-        , custom
-        , abiEncode
-        )
+module Abi.Encode exposing
+    ( Encoding, functionCall, functionCallWithDebug
+    , address, uint, int, bool, staticBytes, ipfsHash, custom
+    , abiEncode
+    )
 
 {-| Encode before sending RPC Calls
 
@@ -28,9 +19,8 @@ module Abi.Encode
 
 import Abi.Int as AbiInt
 import BigInt exposing (BigInt)
-import Eth.Types exposing (Hex, IPFSHash)
+import Eth.Types exposing (Address, Hex, IPFSHash)
 import Eth.Utils as EthUtils exposing (functionSig, ipfsToBytes32)
-import Eth.Types exposing (Address)
 import Internal.Types as Internal
 import Internal.Utils as IU exposing (..)
 
@@ -134,15 +124,16 @@ functionCall_ isDebug sig encodings =
             EthUtils.functionSig sig
                 |> EthUtils.hexToString
                 |> IU.remove0x
-                |> \str -> str ++ byteCodeEncodings
+                |> (\str -> str ++ byteCodeEncodings)
 
         data =
             if isDebug then
                 Debug.log ("Debug Contract Call " ++ sig) data_
+
             else
                 data_
     in
-        Internal.Hex data
+    Internal.Hex data
 
 
 {-| -}
@@ -180,7 +171,7 @@ lowLevelEncode enc =
 
         IPFSHashE ipfsHash ->
             EthUtils.ipfsToBytes32 ipfsHash
-                |> \(Internal.Hex zerolessHex) -> zerolessHex
+                |> (\(Internal.Hex zerolessHex) -> zerolessHex)
 
         Custom string ->
             IU.remove0x string

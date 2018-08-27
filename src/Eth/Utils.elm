@@ -1,48 +1,21 @@
-module Eth.Utils
-    exposing
-        ( -- ADDRESS
-          toAddress
-        , addressToString
-        , addressToChecksumString
-        , isAddress
-        , isChecksumAddress
-          -- HEX
-        , toHex
-        , hexToString
-        , hexToUtf8
-        , hexToAscii
-        , isHex
-        , hexAppend
-        , hexConcat
-          -- TX-HASH
-        , toTxHash
-        , txHashToString
-        , isTxHash
-          -- BLOCK-HASH
-        , toBlockHash
-        , blockHashToString
-        , isBlockHash
-          --SHA3
-        , functionSig
-        , keccak256
-        , isSha256
-        , lowLevelKeccak256
-          -- IPFS-HASH
-        , toIPFSHash
-        , ipfsHashToString
-        , ipfsToBytes32
-        , isIPFSHash
-          -- UNSAFE
-        , unsafeToAddress
-        , unsafeToHex
-        , unsafeToTxHash
-        , unsafeToBlockHash
-        , unsafeToIPFSHash
-          -- APPLICATION UTILS
-        , Retry
-        , retry
-        , valueToMsg
-        )
+module Eth.Utils exposing
+    ( toAddress, addressToString, addressToChecksumString, isAddress, isChecksumAddress
+    , toHex, hexToString, isHex, hexToAscii, hexToUtf8, hexAppend, hexConcat
+    , toTxHash, txHashToString, isTxHash
+    , toBlockHash, blockHashToString, isBlockHash
+    , functionSig, keccak256, isSha256, lowLevelKeccak256
+    , ipfsHashToString, ipfsToBytes32, toIPFSHash, isIPFSHash
+    , unsafeToHex, unsafeToAddress, unsafeToTxHash, unsafeToBlockHash, unsafeToIPFSHash
+    , Retry, retry, valueToMsg
+    -- TX-HASH
+    --SHA3
+    -- HEX
+    -- UNSAFE
+    -- BLOCK-HASH
+    -- IPFS-HASH
+    -- ADDRESS
+    -- APPLICATION UTILS
+    )
 
 {-| String/Type Conversion and Application Helpers
 
@@ -102,16 +75,17 @@ import Eth.Types exposing (..)
 import Hex
 import Internal.Types as Internal
 import Internal.Utils as Internal exposing (..)
-import Json.Encode as Encode exposing (Value)
 import Json.Decode as Decode exposing (Decoder)
+import Json.Encode as Encode exposing (Value)
 import Keccak exposing (ethereum_keccak_256)
 import Process
 import Regex exposing (Regex)
 import Result.Extra as Result
-import String.UTF8 as UTF8
 import String.Extra as String
+import String.UTF8 as UTF8
 import Task exposing (Task)
 import Time
+
 
 
 -- Address
@@ -135,24 +109,31 @@ toAddress str =
         emptyZerosInBytes32 =
             String.left 24 noZeroX
     in
-        -- Address is always stored without "0x"
-        if String.length noZeroX == 64 && String.all ((==) '0') emptyZerosInBytes32 then
-            if isUpperCaseAddress bytes32Address || isLowerCaseAddress bytes32Address then
-                Ok <| Internal.Address bytes32Address
-            else if (isChecksumAddress bytes32Address) then
-                Ok <| Internal.Address bytes32Address
-            else
-                Err <| "Given address " ++ quote str ++ " failed the EIP-55 checksum test."
-        else if String.length noZeroX /= 40 then
-            Err <| "Given address " ++ quote str ++ " is not the correct length."
-        else if not (isAddress noZeroX) then
-            Err <| "Given address " ++ quote str ++ " contains invalid hex characters."
-        else if isUpperCaseAddress noZeroX || isLowerCaseAddress noZeroX then
-            Ok <| Internal.Address noZeroX
-        else if (isChecksumAddress noZeroX) then
-            Ok <| Internal.Address noZeroX
+    -- Address is always stored without "0x"
+    if String.length noZeroX == 64 && String.all ((==) '0') emptyZerosInBytes32 then
+        if isUpperCaseAddress bytes32Address || isLowerCaseAddress bytes32Address then
+            Ok <| Internal.Address bytes32Address
+
+        else if isChecksumAddress bytes32Address then
+            Ok <| Internal.Address bytes32Address
+
         else
             Err <| "Given address " ++ quote str ++ " failed the EIP-55 checksum test."
+
+    else if String.length noZeroX /= 40 then
+        Err <| "Given address " ++ quote str ++ " is not the correct length."
+
+    else if not (isAddress noZeroX) then
+        Err <| "Given address " ++ quote str ++ " contains invalid hex characters."
+
+    else if isUpperCaseAddress noZeroX || isLowerCaseAddress noZeroX then
+        Ok <| Internal.Address noZeroX
+
+    else if isChecksumAddress noZeroX then
+        Ok <| Internal.Address noZeroX
+
+    else
+        Err <| "Given address " ++ quote str ++ " failed the EIP-55 checksum test."
 
 
 {-| Convert an Address to a String
@@ -190,6 +171,7 @@ isChecksumAddress str =
         checksumTestChar addrChar hashInt =
             if hashInt >= 8 && Char.isLower addrChar || hashInt < 8 && Char.isUpper addrChar then
                 False
+
             else
                 True
 
@@ -199,10 +181,11 @@ isChecksumAddress str =
         checksumCorrect =
             List.map2 checksumTestChar addrChars hashInts
     in
-        if isAddress str then
-            all checksumCorrect
-        else
-            False
+    if isAddress str then
+        all checksumCorrect
+
+    else
+        False
 
 
 isLowerCaseAddress : String -> Bool
@@ -225,6 +208,7 @@ toHex : String -> Result String Hex
 toHex str =
     if isHex str then
         Ok <| Internal.Hex (remove0x str)
+
     else
         Err <| "Something in here is not very hexy: " ++ quote str
 
@@ -247,7 +231,7 @@ isHex =
 -}
 hexToAscii : Hex -> Result String String
 hexToAscii (Internal.Hex hex) =
-    case String.length hex % 2 == 0 of
+    case modBy 2 (String.length hex) == 0 of
         True ->
             String.break 2 hex
                 |> List.map Hex.fromString
@@ -262,7 +246,7 @@ hexToAscii (Internal.Hex hex) =
 -}
 hexToUtf8 : Hex -> Result String String
 hexToUtf8 (Internal.Hex hex) =
-    case String.length hex % 2 == 0 of
+    case modBy 2 (String.length hex) == 0 of
         True ->
             String.break 2 hex
                 |> List.map Hex.fromString
@@ -285,7 +269,7 @@ hexAppend (Internal.Hex hex1) (Internal.Hex hex2) =
 
 {-| Concatenate a list of Hex's
 
-    hexConcat [ Hex 0x12, Hex 0x34, Hex 0x56 ] == Hex 0x123456
+    hexConcat [ Hex 0x12, Hex 0x34, Hex 0x56 ] == Hex 0x00123456
 
 -}
 hexConcat : List Hex -> Hex
@@ -294,8 +278,8 @@ hexConcat hexList =
         reducer (Internal.Hex hex) accum =
             hex ++ accum
     in
-        List.foldr reducer "" hexList
-            |> Internal.Hex
+    List.foldr reducer "" hexList
+        |> Internal.Hex
 
 
 
@@ -308,6 +292,7 @@ toTxHash : String -> Result String TxHash
 toTxHash str =
     if isSha256 str then
         Ok <| Internal.TxHash (remove0x str)
+
     else
         Err <| "Given txHash " ++ quote str ++ " is not valid."
 
@@ -339,6 +324,7 @@ toBlockHash : String -> Result String BlockHash
 toBlockHash str =
     if isSha256 str then
         Ok <| Internal.BlockHash (remove0x str)
+
     else
         Err <| "Given blockHash " ++ quote str ++ " is not valid."
 
@@ -366,7 +352,7 @@ isBlockHash =
 
 {-| Convert a contract function name to it's 4-byte function signature.
 
-    Utils.functionSig "transfer(address,uint256)" == (Hex "a9059cbb")
+    Utils.functionSig "transfer(address,uint256)" == Hex "a9059cbb"
 
 -}
 functionSig : String -> Hex
@@ -426,8 +412,7 @@ The "Qm" is there to help future proof IPFS, and allow for other hashing algorit
 
     U.toIPFSHash "QmNXnCWPS2szLaQGVA6TFtiUAJB2YnFTJJFTXPGuc4wocQ"
         |> Result.map U.ipfsToBytes32
-
-    > Ok (Hex "02d9db84e21354dd4cc160eca9d13fa6f1b1bb44324013204098ae24090e717d")
+        > Ok (Hex "02d9db84e21354dd4cc160eca9d13fa6f1b1bb44324013204098ae24090e717d")
 
 Can be decoded safely decoded back to it's "Qm"-edness with `Evm.Decode.ipfsHash`.
 
@@ -445,8 +430,10 @@ toIPFSHash : String -> Result String IPFSHash
 toIPFSHash str =
     if String.length str /= 46 then
         Err <| str ++ " is an invalid IPFS Hash. Must be 46 chars long."
+
     else if String.left 2 str /= "Qm" then
         Err <| str ++ " is an invalid \"elm-ethereum friendly\" IPFS Hash. Must begin with \"Qm\"."
+
     else
         Base58.decode str
             |> Result.andThen (\_ -> Ok <| Internal.IPFSHash str)
@@ -514,23 +501,24 @@ checksumHelper zeroLessAddress =
         addressChars =
             String.toList zeroLessAddress
     in
-        addressChars
-            |> List.map (Char.toLower >> Char.toCode)
-            |> ethereum_keccak_256
-            |> List.take 20
-            |> List.map (Hex.toString >> toByteLength)
-            |> String.join ""
-            |> String.split ""
-            |> List.map Hex.fromString
-            |> Result.combine
-            |> Result.withDefault []
-            |> (,) addressChars
+    addressChars
+        |> List.map (Char.toLower >> Char.toCode)
+        |> ethereum_keccak_256
+        |> List.take 20
+        |> List.map (Hex.toString >> toByteLength)
+        |> String.join ""
+        |> String.split ""
+        |> List.map Hex.fromString
+        |> Result.combine
+        |> Result.withDefault []
+        |> (\b -> ( addressChars, b ))
 
 
 compareCharToHash : Char -> Int -> Char
 compareCharToHash addrChar hashInt =
     if hashInt >= 8 then
         Char.toUpper addrChar
+
     else
         addrChar
 
@@ -543,8 +531,8 @@ checksumIt str =
                 |> remove0x
                 |> checksumHelper
     in
-        List.map2 compareCharToHash addrChars hashInts
-            |> String.fromList
+    List.map2 compareCharToHash addrChars hashInts
+        |> String.fromList
 
 
 
@@ -575,15 +563,16 @@ retry { attempts, sleep } myTask =
         remaining =
             attempts - 1
     in
-        myTask
-            |> Task.onError
-                (\x ->
-                    if remaining > 0 then
-                        Process.sleep (sleep * Time.second)
-                            |> Task.andThen (\_ -> retry (Retry remaining sleep) myTask)
-                    else
-                        Task.fail x
-                )
+    myTask
+        |> Task.onError
+            (\x ->
+                if remaining > 0 then
+                    Process.sleep (sleep * Time.second)
+                        |> Task.andThen (\_ -> retry (Retry remaining sleep) myTask)
+
+                else
+                    Task.fail x
+            )
 
 
 {-| Useful for decoding past a result straight into a Msg.
@@ -609,4 +598,4 @@ valueToMsg successMsg failureMsg decoder =
                 Err error ->
                     failureMsg error
     in
-        resultToMessage << Decode.decodeValue decoder
+    resultToMessage << Decode.decodeValue decoder

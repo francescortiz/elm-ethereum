@@ -1,14 +1,4 @@
-module Eth.Decode
-    exposing
-        ( address
-        , hex
-        , txHash
-        , blockHash
-        , ipfsHash
-        , event
-        , blockHead
-        , tx
-        )
+module Eth.Decode exposing (address, hex, txHash, blockHash, ipfsHash, event, blockHead, tx)
 
 {-| Eth Decoders
 
@@ -17,10 +7,10 @@ module Eth.Decode
 -}
 
 import Eth.Types exposing (..)
-import Eth.Utils exposing (toAddress, toHex, toTxHash, toBlockHash, toIPFSHash)
-import Internal.Decode exposing (stringInt, hexInt, bigInt, hexTime, hexBool, resultToDecoder, nonZero)
-import Json.Decode as Decode exposing (Decoder, string, bool, list, nullable)
-import Json.Decode.Pipeline exposing (required, decode, custom)
+import Eth.Utils exposing (toAddress, toBlockHash, toHex, toIPFSHash, toTxHash)
+import Internal.Decode exposing (bigInt, hexBool, hexInt, hexTime, nonZero, resultToDecoder, stringInt)
+import Json.Decode as Decode exposing (Decoder, bool, list, nullable, string)
+import Json.Decode.Pipeline exposing (custom, decode, required)
 
 
 {-| -}

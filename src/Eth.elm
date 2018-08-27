@@ -1,51 +1,11 @@
-module Eth
-    exposing
-        ( call
-        , callAtBlock
-        , estimateGas
-        , getStorageAt
-        , getStorageAtBlock
-        , getCode
-        , getCodeAtBlock
-        , getTx
-        , getTxReceipt
-        , getTxByBlockHashAndIndex
-        , getTxByBlockNumberAndIndex
-        , toSend
-        , encodeSend
-        , sendTx
-        , sendRawTx
-        , getBalance
-        , getBalanceAtBlock
-        , getTxCount
-        , getTxCountAtBlock
-        , getBlockNumber
-        , getBlock
-        , getBlockByHash
-        , getBlockWithTxObjs
-        , getBlockByHashWithTxObjs
-        , getBlockTxCount
-        , getBlockTxCountByHash
-        , getUncleCount
-        , getUncleCountByHash
-        , getUncleAtIndex
-        , getUncleByBlockHashAtIndex
-        , getLogs
-        , newFilter
-        , newBlockFilter
-        , newPendingTxFilter
-        , getFilterChanges
-        , getFilterLogs
-        , uninstallFilter
-        , sign
-        , protocolVersion
-        , syncing
-        , coinbase
-        , mining
-        , hashrate
-        , gasPrice
-        , accounts
-        )
+module Eth exposing
+    ( call, estimateGas, getStorageAt, getCode, callAtBlock, getStorageAtBlock, getCodeAtBlock
+    , getTx, getTxReceipt, toSend, encodeSend, sendTx, sendRawTx, getTxByBlockHashAndIndex, getTxByBlockNumberAndIndex
+    , getBalance, getTxCount, getBalanceAtBlock, getTxCountAtBlock
+    , getBlockNumber, getBlock, getBlockByHash, getBlockWithTxObjs, getBlockByHashWithTxObjs, getBlockTxCount, getBlockTxCountByHash, getUncleCount, getUncleCountByHash, getUncleAtIndex, getUncleByBlockHashAtIndex
+    , getLogs, newFilter, newBlockFilter, newPendingTxFilter, getFilterChanges, getFilterLogs, uninstallFilter
+    , sign, protocolVersion, syncing, coinbase, mining, hashrate, gasPrice, accounts
+    )
 
 {-| Ethereum RPC Methods
 
@@ -100,14 +60,15 @@ Geth, Parity, and Infura support websockets.
 -}
 
 import BigInt exposing (BigInt)
-import Eth.Types exposing (..)
 import Eth.RPC as RPC
+import Eth.Types exposing (..)
 import Http
 import Internal.Decode as Decode
 import Internal.Encode as Encode
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Task exposing (Task)
+
 
 
 -- Contracts
@@ -622,7 +583,7 @@ getFilterLogs ethNode decoder filterId =
 
 {-| Uninstalls a filter with given id.
 Should always be called when watch is no longer needed.
-Additonally Filters timeout when they aren't requested with eth_getFilterChanges for a period of time.
+Additonally Filters timeout when they aren't requested with eth\_getFilterChanges for a period of time.
 -}
 uninstallFilter : HttpProvider -> FilterId -> Task Http.Error FilterId
 uninstallFilter ethNode filterId =
@@ -640,7 +601,7 @@ uninstallFilter ethNode filterId =
 
 {-| Sign an arbitrary chunk of N bytes.
 
-The sign method calculates an Ethereum specific signature with: sign(keccak256("\x19Ethereum Signed Message:\n" + len(message) + message))).
+The sign method calculates an Ethereum specific signature with: sign(keccak256("\\x19Ethereum Signed Message:\\n" + len(message) + message))).
 
 By adding a prefix to the message makes the calculated signature recognisable as an Ethereum specific signature.
 This prevents misuse where a malicious DApp can sign arbitrary data (e.g. transaction) and use the signature to impersonate the victim.
