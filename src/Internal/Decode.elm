@@ -1,19 +1,19 @@
 module Internal.Decode exposing (address, bigInt, block, blockHash, blockHead, event, hex, hexBool, hexInt, hexTime, log, nonZero, resultToDecoder, stringInt, syncStatus, tx, txHash, txReceipt, uncle)
 
-import BigInt exposing (BigInt)
 import Eth.Types exposing (..)
 import Eth.Utils exposing (toAddress, toBlockHash, toHex, toTxHash)
 import Hex
 import Internal.Utils exposing (add0x, remove0x)
 import Json.Decode as Decode exposing (..)
-import Json.Decode.Pipeline exposing (custom, decode, optional, required)
-import Time exposing (Time)
+import Json.Decode.Pipeline exposing (custom, optional, required)
+import Legacy.BigInt as BigInt exposing (BigInt)
+import Time exposing (Posix, millisToPosix)
 
 
 {-| -}
 block : Decoder a -> Decoder (Block a)
 block txsDecoder =
-    decode Block
+    succeed Block
         |> required "number" hexInt
         |> required "hash" blockHash
         |> required "parentHash" blockHash
@@ -31,7 +31,7 @@ block txsDecoder =
         |> required "size" hexInt
         |> required "gasLimit" hexInt
         |> required "gasUsed" hexInt
-        |> optional "timestamp" hexTime 0
+        |> optional "timestamp" hexTime (millisToPosix 0)
         -- See comment above
         |> optional "transactions" (list txsDecoder) []
         |> optional "uncles" (list string) []
@@ -46,7 +46,7 @@ uncle =
 {-| -}
 blockHead : Decoder BlockHead
 blockHead =
-    decode BlockHead
+    succeed BlockHead
         |> required "number" hexInt
         |> required "hash" blockHash
         |> required "parentHash" blockHash
@@ -68,7 +68,7 @@ blockHead =
 {-| -}
 tx : Decoder Tx
 tx =
-    decode Tx
+    succeed Tx
         |> required "hash" txHash
         |> required "nonce" hexInt
         |> required "blockHash" (nonZero blockHash)
@@ -85,7 +85,7 @@ tx =
 {-| -}
 txReceipt : Decoder TxReceipt
 txReceipt =
-    decode TxReceipt
+    succeed TxReceipt
         |> required "transactionHash" txHash
         |> required "transactionIndex" hexInt
         |> required "blockHash" blockHash
@@ -102,7 +102,7 @@ txReceipt =
 {-| -}
 log : Decoder Log
 log =
-    decode Log
+    succeed Log
         |> required "address" address
         |> required "data" string
         |> required "topics" (list hex)
@@ -117,7 +117,7 @@ log =
 {-| -}
 event : Decoder a -> Decoder (Event a)
 event returnDataDecoder =
-    decode Event
+    succeed Event
         |> required "address" address
         |> required "data" string
         |> required "topics" (list hex)
@@ -133,7 +133,7 @@ event returnDataDecoder =
 {-| -}
 syncStatus : Decoder (Maybe SyncStatus)
 syncStatus =
-    decode SyncStatus
+    succeed SyncStatus
         |> required "startingBlock" int
         |> required "currentBlock" int
         |> required "highestBlock" int
@@ -173,7 +173,7 @@ hex =
 {-| -}
 stringInt : Decoder Int
 stringInt =
-    resultToDecoder String.toInt
+    maybeToDecoder String.toInt
 
 
 {-| -}
@@ -189,9 +189,9 @@ bigInt =
 
 
 {-| -}
-hexTime : Decoder Time
+hexTime : Decoder Posix
 hexTime =
-    resultToDecoder (remove0x >> Hex.fromString >> Result.map toFloat >> Result.map ((*) 1000))
+    resultToDecoder (remove0x >> Hex.fromString >> Result.map (\v -> v * 1000 |> millisToPosix))
 
 
 {-| -}
@@ -227,6 +227,21 @@ resultToDecoder strToResult =
 
                 Err error ->
                     Decode.fail error
+    in
+    Decode.string |> Decode.andThen convert
+
+
+{-| -}
+maybeToDecoder : (String -> Maybe a) -> Decoder a
+maybeToDecoder strToMaybe =
+    let
+        convert n =
+            case strToMaybe n of
+                Just val ->
+                    Decode.succeed val
+
+                Nothing ->
+                    Decode.fail ("Decoding failed for '" ++ n ++ "'")
     in
     Decode.string |> Decode.andThen convert
 

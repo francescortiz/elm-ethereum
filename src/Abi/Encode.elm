@@ -18,11 +18,11 @@ module Abi.Encode exposing
 -}
 
 import Abi.Int as AbiInt
-import BigInt exposing (BigInt)
 import Eth.Types exposing (Address, Hex, IPFSHash)
 import Eth.Utils as EthUtils exposing (functionSig, ipfsToBytes32)
 import Internal.Types as Internal
 import Internal.Utils as IU exposing (..)
+import Legacy.BigInt as BigInt exposing (BigInt)
 
 
 {-| Not yet implemented : Dynamic Bytes, String, List
@@ -140,15 +140,15 @@ functionCall_ isDebug sig encodings =
 lowLevelEncode : Encoding -> String
 lowLevelEncode enc =
     case enc of
-        AddressE (Internal.Address address) ->
-            IU.leftPadTo64 address
+        AddressE (Internal.Address address_) ->
+            IU.leftPadTo64 address_
 
-        UintE uint ->
-            BigInt.toHexString uint
+        UintE uint_ ->
+            BigInt.toHexString uint_
                 |> IU.leftPadTo64
 
-        IntE int ->
-            AbiInt.toString int
+        IntE int_ ->
+            AbiInt.toString int_
 
         BoolE True ->
             IU.leftPadTo64 "1"
@@ -169,8 +169,8 @@ lowLevelEncode enc =
         ListE _ ->
             "not implemeneted yet"
 
-        IPFSHashE ipfsHash ->
-            EthUtils.ipfsToBytes32 ipfsHash
+        IPFSHashE ipfsHash_ ->
+            EthUtils.ipfsToBytes32 ipfsHash_
                 |> (\(Internal.Hex zerolessHex) -> zerolessHex)
 
         Custom string ->

@@ -67,8 +67,6 @@ All values coming from the outside world, like user input or server responses, s
 
 -}
 
-import Base58
-import BigInt exposing (BigInt)
 import Bool.Extra exposing (all)
 import Char
 import Eth.Types exposing (..)
@@ -78,13 +76,14 @@ import Internal.Utils as Internal exposing (..)
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Keccak exposing (ethereum_keccak_256)
+import Legacy.Base58 as Base58
+import Legacy.BigInt as BigInt exposing (BigInt)
 import Process
 import Regex exposing (Regex)
 import Result.Extra as Result
 import String.Extra as String
 import String.UTF8 as UTF8
 import Task exposing (Task)
-import Time
 
 
 
@@ -160,7 +159,7 @@ addressToChecksumString (Internal.Address address) =
 -}
 isAddress : String -> Bool
 isAddress =
-    Regex.contains (Regex.regex "^((0[Xx]){1})?[0-9A-Fa-f]{40}$")
+    Regex.contains (Maybe.withDefault Regex.never (Regex.fromString "^((0[Xx]){1})?[0-9A-Fa-f]{40}$"))
 
 
 {-| Check if given string is a valid checksum address.
@@ -190,12 +189,12 @@ isChecksumAddress str =
 
 isLowerCaseAddress : String -> Bool
 isLowerCaseAddress =
-    Regex.contains (Regex.regex "^((0[Xx]){1})?[0-9a-f]{40}$")
+    Regex.contains (Maybe.withDefault Regex.never (Regex.fromString "^((0[Xx]){1})?[0-9a-f]{40}$"))
 
 
 isUpperCaseAddress : String -> Bool
 isUpperCaseAddress =
-    Regex.contains (Regex.regex "^((0[Xx]){1})?[0-9A-F]{40}$")
+    Regex.contains (Maybe.withDefault Regex.never (Regex.fromString "^((0[Xx]){1})?[0-9A-F]{40}$"))
 
 
 
@@ -224,7 +223,7 @@ hexToString (Internal.Hex hex) =
 -}
 isHex : String -> Bool
 isHex =
-    Regex.contains (Regex.regex "^((0[Xx]){1})?[0-9a-fA-F]+$")
+    Regex.contains (Maybe.withDefault Regex.never (Regex.fromString "^((0[Xx]){1})?[0-9a-fA-F]+$"))
 
 
 {-| Convert Given Hex into ASCII. Will fail if Hex is an uneven length.
@@ -382,7 +381,7 @@ keccak256 str =
 -}
 isSha256 : String -> Bool
 isSha256 =
-    Regex.contains (Regex.regex "^((0[Xx]){1})?[0-9a-fA-F]{64}$")
+    Regex.contains (Maybe.withDefault Regex.never (Regex.fromString "^((0[Xx]){1})?[0-9a-fA-F]{64}$"))
 
 
 {-| Same as `ethereum_keccak_256` from [this](http://package.elm-lang.org/packages/prozacchiwawa/elm-keccak/latest) library.
@@ -567,7 +566,7 @@ retry { attempts, sleep } myTask =
         |> Task.onError
             (\x ->
                 if remaining > 0 then
-                    Process.sleep (sleep * Time.second)
+                    Process.sleep (sleep * 1000)
                         |> Task.andThen (\_ -> retry (Retry remaining sleep) myTask)
 
                 else
@@ -587,7 +586,7 @@ Comes in handy with Eth.Sentry.Event values.
         | Error String
 
 -}
-valueToMsg : (a -> msg) -> (String -> msg) -> Decoder a -> (Value -> msg)
+valueToMsg : (a -> msg) -> (Decode.Error -> msg) -> Decoder a -> (Value -> msg)
 valueToMsg successMsg failureMsg decoder =
     let
         resultToMessage result =

@@ -44,14 +44,14 @@ module Abi.Decode exposing
 -}
 
 import Abi.Int as AbiInt
-import Base58
-import BigInt exposing (BigInt)
 import Eth.Types exposing (Address, IPFSHash)
 import Eth.Utils as U exposing (toAddress)
 import Hex
 import Internal.Decode exposing (resultToDecoder)
 import Internal.Utils exposing (..)
 import Json.Decode as Decode exposing (Decoder)
+import Legacy.Base58 as Base58
+import Legacy.BigInt as BigInt exposing (BigInt)
 import Result.Extra as ResultExtra
 import String.Extra as StringExtra
 import String.UTF8 as UTF8
@@ -352,8 +352,8 @@ arrayHelp accum len (AbiDecoder decoder) tape =
         n ->
             decoder tape
                 |> Result.andThen
-                    (\( tape, val ) ->
-                        arrayHelp (val :: accum) (n - 1) (AbiDecoder decoder) tape
+                    (\( tape_, val ) ->
+                        arrayHelp (val :: accum) (n - 1) (AbiDecoder decoder) tape_
                     )
 
 

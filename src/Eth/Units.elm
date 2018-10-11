@@ -32,7 +32,7 @@ Helpers for dealing with floats.
 
 -}
 
-import BigInt exposing (BigInt)
+import Legacy.BigInt as BigInt exposing (BigInt)
 import Regex
 
 
@@ -87,7 +87,7 @@ type EthUnit
 toWei : EthUnit -> String -> Result String BigInt
 toWei unit amount =
     -- check to make sure input string is formatted correctly, should never error in here.
-    if Regex.contains (Regex.regex "^\\d*\\.?\\d+$") amount then
+    if Regex.contains (Maybe.withDefault Regex.never (Regex.fromString "^\\d*\\.?\\d+$")) amount then
         let
             decimalPoints =
                 decimalShift unit
@@ -143,8 +143,8 @@ fromWei unit amount =
                 ++ String.right decimalIndex amountStr
     in
     result
-        |> Regex.replace Regex.All
-            (Regex.regex "(^0*(?=0\\.|[1-9]))|(\\.?0*$)")
+        |> Regex.replace
+            (Maybe.withDefault Regex.never (Regex.fromString "(^0*(?=0\\.|[1-9]))|(\\.?0*$)"))
             (\i -> "")
 
 

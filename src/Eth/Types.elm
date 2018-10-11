@@ -23,10 +23,10 @@ module Eth.Types exposing
 
 -}
 
-import BigInt exposing (BigInt)
 import Internal.Types as Internal
 import Json.Decode exposing (Decoder)
-import Time exposing (Time)
+import Legacy.BigInt as BigInt exposing (BigInt)
+import Time exposing (Posix)
 
 
 
@@ -140,7 +140,7 @@ type alias Block a =
     , size : Int
     , gasLimit : Int
     , gasUsed : Int
-    , timestamp : Time
+    , timestamp : Posix
     , transactions : List a
     , uncles : List String
     }
@@ -168,7 +168,7 @@ type alias BlockHead =
     , gasLimit : Int
     , gasUsed : Int
     , mixHash : String
-    , timestamp : Time
+    , timestamp : Posix
     }
 
 

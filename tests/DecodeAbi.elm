@@ -1,11 +1,12 @@
-module DecodeAbi exposing (..)
+module DecodeAbi exposing (GetVals, complexStorage, decodeInt, getVals, getValsCallData, getValsDecoder)
 
 -- import Fuzz exposing (Fuzzer, int, list, string)
 
-import BigInt exposing (BigInt)
-import Expect
-import Test exposing (..)
 import Abi.Decode as Abi
+import Expect
+import Legacy.BigInt as BigInt exposing (BigInt)
+import Test exposing (..)
+
 
 
 -- Abi Decoders
@@ -168,7 +169,7 @@ getVals =
             , v8 = [ b2Vec, b2Vec, b2Vec ]
             }
     in
-        Result.map makeGetVals v3Val
+    Result.map makeGetVals v3Val
 
 
 type alias GetVals =

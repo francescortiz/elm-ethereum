@@ -1,7 +1,7 @@
 module Abi.Int exposing (fromBinaryUnsafe, fromString, isNegIntUnsafe, toBinaryUnsafe, toString, twosComplementUnsafe)
 
-import BigInt exposing (BigInt)
 import Internal.Utils exposing (add0x, remove0x)
+import Legacy.BigInt as BigInt exposing (BigInt)
 import String.Extra as StringExtra
 
 
@@ -31,7 +31,7 @@ fromString str =
 toString : BigInt -> String
 toString num =
     let
-        ( xs, twosComplementOrNotTwosComplement ) =
+        ( xs_, twosComplementOrNotTwosComplement ) =
             case BigInt.toHexString num |> String.toList of
                 '-' :: xs ->
                     ( xs, twosComplementUnsafe >> String.padLeft 256 '1' )
@@ -39,7 +39,7 @@ toString num =
                 xs ->
                     ( xs, String.padLeft 256 '0' )
     in
-    List.map toBinaryUnsafe xs
+    List.map toBinaryUnsafe xs_
         |> String.join ""
         |> twosComplementOrNotTwosComplement
         |> StringExtra.break 4
