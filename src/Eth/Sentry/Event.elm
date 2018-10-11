@@ -548,6 +548,7 @@ newBlockHeadsKey =
     FilterKey ( "new", "heads" )
 
 
+debugHelp : { a | debug : Bool } -> String -> b -> b
 debugHelp sentry logText val =
     if sentry.debug then
         Debug.log ("EventSentry - " ++ logText) val
@@ -556,6 +557,7 @@ debugHelp sentry logText val =
         val
 
 
+log : { subOpened : String, subClosed : String }
 log =
     { subOpened = "Subscription Opened"
     , subClosed = "Subscription Closed"

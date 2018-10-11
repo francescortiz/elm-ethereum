@@ -5,6 +5,7 @@ module Eth exposing
     , getBlockNumber, getBlock, getBlockByHash, getBlockWithTxObjs, getBlockByHashWithTxObjs, getBlockTxCount, getBlockTxCountByHash, getUncleCount, getUncleCountByHash, getUncleAtIndex, getUncleByBlockHashAtIndex
     , getLogs, newFilter, newBlockFilter, newPendingTxFilter, getFilterChanges, getFilterLogs, uninstallFilter
     , sign, protocolVersion, syncing, coinbase, mining, hashrate, gasPrice, accounts
+    , getEvents
     )
 
 {-| Ethereum RPC Methods
@@ -473,6 +474,18 @@ getLogs ethNode logFilter =
         , method = "eth_getLogs"
         , params = [ Encode.logFilter logFilter ]
         , decoder = Decode.list Decode.log
+        }
+
+
+{-| Get an array of all events (logs with data type) matching a given filter object.
+-}
+getEvents : HttpProvider -> Decoder a -> LogFilter -> Task Http.Error (List (Event a))
+getEvents ethNode returnDataDecoder logFilter =
+    RPC.toTask
+        { url = ethNode
+        , method = "eth_getLogs"
+        , params = [ Encode.logFilter logFilter ]
+        , decoder = Decode.list (Decode.event returnDataDecoder)
         }
 
 
