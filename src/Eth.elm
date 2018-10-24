@@ -4,8 +4,8 @@ module Eth exposing
     , getBalance, getTxCount, getBalanceAtBlock, getTxCountAtBlock
     , getBlockNumber, getBlock, getBlockByHash, getBlockWithTxObjs, getBlockByHashWithTxObjs, getBlockTxCount, getBlockTxCountByHash, getUncleCount, getUncleCountByHash, getUncleAtIndex, getUncleByBlockHashAtIndex
     , getLogs, newFilter, newBlockFilter, newPendingTxFilter, getFilterChanges, getFilterLogs, uninstallFilter
-    , sign, protocolVersion, syncing, coinbase, mining, hashrate, gasPrice, accounts
-    , getEvents
+    , sign, protocolVersion, syncing, coinbase, mining, hashrate, accounts
+    , eth_gasPrice, getEvents
     )
 
 {-| Ethereum RPC Methods
@@ -701,8 +701,8 @@ hashrate ethNode =
 **Note**: not always accurate. See EthGasStation website
 
 -}
-gasPrice : HttpProvider -> Task Http.Error BigInt
-gasPrice ethNode =
+eth_gasPrice : HttpProvider -> Task Http.Error BigInt
+eth_gasPrice ethNode =
     RPC.toTask
         { url = ethNode
         , method = "eth_gasPrice"

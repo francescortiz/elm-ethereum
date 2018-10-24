@@ -59,5 +59,5 @@ encode id method params =
         [ ( "id", int id )
         , ( "jsonrpc", string jsonRPCVersion )
         , ( "method", string method )
-        , ( "params", list params )
+        , ( "params", list identity params )
         ]

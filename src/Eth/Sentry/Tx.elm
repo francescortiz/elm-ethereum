@@ -238,7 +238,7 @@ update msg (TxSentry sentry) =
                 Just txState ->
                     let
                         _ =
-                            debugHelp sentry.debug log.signed (toString txHashResult)
+                            debugHelp sentry.debug log.signed (Debug.toString txHashResult)
 
                         txSignedCmd =
                             case txState.onSignedTagger of
@@ -303,7 +303,7 @@ update msg (TxSentry sentry) =
             -- Msg User Land accordingly.
             let
                 _ =
-                    debugHelp sentry.debug log.broadcast (toString txResult)
+                    debugHelp sentry.debug log.broadcast (Debug.toString txResult)
             in
             case Dict.get ref sentry.txs of
                 Just txState ->
@@ -340,10 +340,10 @@ update msg (TxSentry sentry) =
                                 failOtherCallbacks =
                                     case ( txState.onBroadcastTagger, txState.onMinedTagger ) of
                                         ( Just txToMsg, _ ) ->
-                                            Task.perform txToMsg (Task.succeed <| Err <| toString error)
+                                            Task.perform txToMsg (Task.succeed <| Err <| Debug.toString error)
 
                                         ( _, Just ( txReceiptToMsg, _ ) ) ->
-                                            Task.perform txReceiptToMsg (Task.succeed <| Err <| toString error)
+                                            Task.perform txReceiptToMsg (Task.succeed <| Err <| Debug.toString error)
 
                                         ( Nothing, Nothing ) ->
                                             Cmd.none
@@ -360,7 +360,7 @@ update msg (TxSentry sentry) =
             -- When Tx is mined because a TxReceipt was returned by the network...
             let
                 _ =
-                    debugHelp sentry.debug log.mined (toString txReceiptResult)
+                    debugHelp sentry.debug log.mined (Debug.toString txReceiptResult)
             in
             case Dict.get ref sentry.txs of
                 Just txState ->
@@ -413,7 +413,7 @@ update msg (TxSentry sentry) =
                                 cmdIfMinedFail =
                                     case txState.onMinedTagger of
                                         Just ( txReceiptToMsg, _ ) ->
-                                            Task.perform txReceiptToMsg (Task.succeed <| Err <| toString error)
+                                            Task.perform txReceiptToMsg (Task.succeed <| Err <| Debug.toString error)
 
                                         Nothing ->
                                             Cmd.none
@@ -495,7 +495,7 @@ update msg (TxSentry sentry) =
         TrackTx ref _ (Err error) ->
             let
                 _ =
-                    debugHelp sentry.debug log.trackTx ("Error getting latest block. Info: " ++ toString error)
+                    debugHelp sentry.debug log.trackTx ("Error getting latest block. Info: " ++ Debug.toString error)
             in
             ( TxSentry sentry, Cmd.none )
 
@@ -561,10 +561,10 @@ getTxTrackerToMsg txs ref =
 
 
 encodeTxData : Int -> Send -> Value
-encodeTxData ref send =
+encodeTxData ref send0 =
     Encode.object
         [ ( "ref", Encode.int ref )
-        , ( "txParams", Eth.encodeSend send )
+        , ( "txParams", Eth.encodeSend send0 )
         ]
 
 
@@ -581,10 +581,10 @@ decodeTxData val =
 
                 Nothing ->
                     TxSigned result.ref
-                        (Err <| "Problem signing/broadcasting Tx. Ref #" ++ toString result.ref)
+                        (Err <| "Problem signing/broadcasting Tx. Ref #" ++ Debug.toString result.ref)
 
         Err error ->
-            ErrorDecoding error
+            ErrorDecoding (Debug.toString error)
 
 
 txIdResponseDecoder : Decoder { ref : Int, txHash : Maybe TxHash }
@@ -595,12 +595,12 @@ txIdResponseDecoder =
 
 
 newTxState : Send -> CustomSend msg -> TxState msg
-newTxState send { onSign, onBroadcast, onMined } =
-    { params = send
+newTxState send0 { onSign, onBroadcast, onMined } =
+    { params = send0
     , onSignedTagger = onSign
     , onBroadcastTagger = onBroadcast
     , onMinedTagger = onMined
-    , status = Signing send
+    , status = Signing send0
     }
 
 

@@ -4,6 +4,7 @@ module Eth.Sentry.Event exposing
     , watch, watchOnce, unWatch, toFilterKey
     , newBlocks, unWatchNewBlocks, nextBlock
     , pendingTxs, unWatchPendingTxs
+    , decodeMessage, nodeResponseToMsg
     )
 
 {-| Listen to contract events, and other chain activity
@@ -45,8 +46,9 @@ import Internal.Encode as Encode
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Encode as Encode
 import Legacy.BigInt as BigInt
-import Legacy.WebSocket as WS
+import PortFunnel.WebSocket as WS
 import Task
+import Time exposing (millisToPosix)
 
 
 
@@ -116,16 +118,17 @@ init tagger nodePath =
 
 
 {-| -}
-listen : EventSentry msg -> Sub msg
-listen (EventSentry sentry) =
-    WS.listen sentry.nodePath (nodeResponseToMsg sentry.debug << decodeMessage)
-        |> Sub.map sentry.tagger
+listen : (Value -> Cmd msg) -> EventSentry msg -> Cmd msg
+listen cmdPort (EventSentry sentry) =
+    WS.makeOpen sentry.nodePath
+        -- (nodeResponseToMsg sentry.debug << decodeMessage)
+        |> WS.send cmdPort
 
 
 {-| -}
-watch : (Value -> msg) -> EventSentry msg -> LogFilter -> ( EventSentry msg, Cmd msg )
-watch onReceive sentry logFilter =
-    watch_ False [ Encode.string "logs", Encode.logFilter logFilter ] onReceive sentry (toFilterKey logFilter)
+watch : (Value -> Cmd msg) -> (Value -> msg) -> EventSentry msg -> LogFilter -> ( EventSentry msg, Cmd msg )
+watch cmdPort onReceive sentry logFilter =
+    watch_ cmdPort False [ Encode.string "logs", Encode.logFilter logFilter ] onReceive sentry (toFilterKey logFilter)
 
 
 
@@ -133,45 +136,45 @@ watch onReceive sentry logFilter =
 
 
 {-| -}
-watchOnce : (Value -> msg) -> EventSentry msg -> LogFilter -> ( EventSentry msg, Cmd msg )
-watchOnce onReceive sentry logFilter =
-    watch_ True [ Encode.string "logs", Encode.logFilter logFilter ] onReceive sentry (toFilterKey logFilter)
+watchOnce : (Value -> Cmd msg) -> (Value -> msg) -> EventSentry msg -> LogFilter -> ( EventSentry msg, Cmd msg )
+watchOnce cmdPort onReceive sentry logFilter =
+    watch_ cmdPort True [ Encode.string "logs", Encode.logFilter logFilter ] onReceive sentry (toFilterKey logFilter)
 
 
 {-| -}
-unWatch : EventSentry msg -> LogFilter -> ( EventSentry msg, Cmd msg )
-unWatch sentry logFilter =
-    unWatch_ sentry (toFilterKey logFilter)
+unWatch : (Value -> Cmd msg) -> EventSentry msg -> LogFilter -> ( EventSentry msg, Cmd msg )
+unWatch cmdPort sentry logFilter =
+    unWatch_ cmdPort sentry (toFilterKey logFilter)
 
 
 {-| -}
-newBlocks : (BlockHead -> msg) -> EventSentry msg -> ( EventSentry msg, Cmd msg )
-newBlocks onReceive sentry =
-    watch_ False [ Encode.string "newHeads" ] (decodeBlockHead >> onReceive) sentry newBlockHeadsKey
+newBlocks : (Value -> Cmd msg) -> (BlockHead -> msg) -> EventSentry msg -> ( EventSentry msg, Cmd msg )
+newBlocks cmdPort onReceive sentry =
+    watch_ cmdPort False [ Encode.string "newHeads" ] (decodeBlockHead >> onReceive) sentry newBlockHeadsKey
 
 
 {-| -}
-nextBlock : (BlockHead -> msg) -> EventSentry msg -> ( EventSentry msg, Cmd msg )
-nextBlock onReceive sentry =
-    watch_ True [ Encode.string "newHeads" ] (decodeBlockHead >> onReceive) sentry newBlockHeadsKey
+nextBlock : (Value -> Cmd msg) -> (BlockHead -> msg) -> EventSentry msg -> ( EventSentry msg, Cmd msg )
+nextBlock cmdPort onReceive sentry =
+    watch_ cmdPort True [ Encode.string "newHeads" ] (decodeBlockHead >> onReceive) sentry newBlockHeadsKey
 
 
 {-| -}
-unWatchNewBlocks : EventSentry msg -> ( EventSentry msg, Cmd msg )
-unWatchNewBlocks sentry =
-    unWatch_ sentry newBlockHeadsKey
+unWatchNewBlocks : (Value -> Cmd msg) -> EventSentry msg -> ( EventSentry msg, Cmd msg )
+unWatchNewBlocks cmdPort sentry =
+    unWatch_ cmdPort sentry newBlockHeadsKey
 
 
 {-| -}
-pendingTxs : (TxHash -> msg) -> EventSentry msg -> ( EventSentry msg, Cmd msg )
-pendingTxs onReceive sentry =
-    watch_ False [ Encode.string "newPendingTransactions" ] (decodeTxHash >> onReceive) sentry pendingTxsKey
+pendingTxs : (Value -> Cmd msg) -> (TxHash -> msg) -> EventSentry msg -> ( EventSentry msg, Cmd msg )
+pendingTxs cmdPort onReceive sentry =
+    watch_ cmdPort False [ Encode.string "newPendingTransactions" ] (decodeTxHash >> onReceive) sentry pendingTxsKey
 
 
 {-| -}
-unWatchPendingTxs : EventSentry msg -> ( EventSentry msg, Cmd msg )
-unWatchPendingTxs sentry =
-    unWatch_ sentry pendingTxsKey
+unWatchPendingTxs : (Value -> Cmd msg) -> EventSentry msg -> ( EventSentry msg, Cmd msg )
+unWatchPendingTxs cmdPort sentry =
+    unWatch_ cmdPort sentry pendingTxsKey
 
 
 {-| -}
@@ -221,8 +224,8 @@ type alias RpcId =
 -- Internal
 
 
-watch_ : Bool -> List Value -> (Value -> msg) -> EventSentry msg -> FilterKey -> ( EventSentry msg, Cmd msg )
-watch_ isOnce rpcParams onReceive ((EventSentry sentry) as sentry_) (FilterKey filterKey) =
+watch_ : (Value -> Cmd msg) -> Bool -> List Value -> (Value -> msg) -> EventSentry msg -> FilterKey -> ( EventSentry msg, Cmd msg )
+watch_ cmdPort isOnce rpcParams onReceive ((EventSentry sentry) as sentry_) (FilterKey filterKey) =
     case Dict.get filterKey sentry.filters of
         Nothing ->
             ( EventSentry
@@ -231,15 +234,16 @@ watch_ isOnce rpcParams onReceive ((EventSentry sentry) as sentry_) (FilterKey f
                     , rpcIdToFKey = Dict.insert sentry.ref (FilterKey filterKey) sentry.rpcIdToFKey
                     , ref = sentry.ref + 1
                 }
-            , WS.send sentry.nodePath (openFilterRpc sentry.ref rpcParams)
+            , WS.makeSend sentry.nodePath (openFilterRpc sentry.ref rpcParams)
+                |> WS.send cmdPort
             )
 
         Just _ ->
             ( sentry_, Cmd.none )
 
 
-unWatch_ : EventSentry msg -> FilterKey -> ( EventSentry msg, Cmd msg )
-unWatch_ ((EventSentry sentry) as sentry_) (FilterKey filterKey) =
+unWatch_ : (Value -> Cmd msg) -> EventSentry msg -> FilterKey -> ( EventSentry msg, Cmd msg )
+unWatch_ cmdPort ((EventSentry sentry) as sentry_) (FilterKey filterKey) =
     case Dict.get filterKey sentry.filters of
         Nothing ->
             ( sentry_, Cmd.none )
@@ -258,7 +262,8 @@ unWatch_ ((EventSentry sentry) as sentry_) (FilterKey filterKey) =
                             , subIdToFKey = Dict.remove subId sentry.subIdToFKey
                             , ref = sentry.ref + 1
                         }
-                    , WS.send sentry.nodePath (closeFilterRpc sentry.ref subId)
+                    , WS.makeSend sentry.nodePath (closeFilterRpc sentry.ref subId)
+                        |> WS.send cmdPort
                     )
 
                 Nothing ->
@@ -321,8 +326,8 @@ type Msg
 
 
 {-| -}
-update : Msg -> EventSentry msg -> ( EventSentry msg, Cmd msg )
-update msg ((EventSentry sentry) as sentry_) =
+update : (Value -> Cmd msg) -> Msg -> EventSentry msg -> ( EventSentry msg, Cmd msg )
+update cmdPort msg ((EventSentry sentry) as sentry_) =
     case msg of
         SubscriptionOpened openedMsg ->
             case getFilterByRpcId openedMsg.rpcId sentry_ of
@@ -345,7 +350,7 @@ update msg ((EventSentry sentry) as sentry_) =
                     ( sentry_, Cmd.none )
 
         CloseSubscription filterKey ->
-            unWatch_ sentry_ filterKey
+            unWatch_ cmdPort sentry_ filterKey
 
         SubscriptionClosed closedMsg ->
             ( sentry_, Cmd.none )
@@ -369,7 +374,8 @@ update msg ((EventSentry sentry) as sentry_) =
                         }
                     , Cmd.batch
                         [ Task.perform filterState.tagger (Task.succeed result)
-                        , WS.send sentry.nodePath (closeFilterRpc sentry.ref subId)
+                        , WS.makeSend sentry.nodePath (closeFilterRpc sentry.ref subId)
+                            |> WS.send cmdPort
                         ]
                     )
 
@@ -383,16 +389,8 @@ update msg ((EventSentry sentry) as sentry_) =
             ( sentry_, Cmd.none )
 
 
-nodeResponseToMsg : Bool -> Maybe NodeResponse -> Msg
-nodeResponseToMsg debug mNodeResponse =
-    let
-        _ =
-            if debug then
-                Debug.log "EventSentry" mNodeResponse
-
-            else
-                mNodeResponse
-    in
+nodeResponseToMsg : Maybe NodeResponse -> Msg
+nodeResponseToMsg mNodeResponse =
     case mNodeResponse of
         Just (Event eventMsg) ->
             EventReceived eventMsg
@@ -521,7 +519,7 @@ decodeBlockHead val =
             blockHead
 
         Err error ->
-            Debug.log error defaultBlockHead
+            Debug.log (Debug.toString error) defaultBlockHead
 
 
 decodeTxHash : Value -> TxHash
@@ -531,7 +529,7 @@ decodeTxHash val =
             txHash
 
         Err error ->
-            Debug.log error Default.emptyTxHash
+            Debug.log (Debug.toString error) Default.emptyTxHash
 
 
 
@@ -585,5 +583,5 @@ defaultBlockHead =
     , gasLimit = 0
     , gasUsed = 0
     , mixHash = ""
-    , timestamp = 0
+    , timestamp = millisToPosix 0
     }

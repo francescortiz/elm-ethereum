@@ -788,7 +788,7 @@ normaliseDigit x =
             |> Tuple.mapFirst ((+) -1)
 
     else
-        ( x // baseDigit, remainderBy baseDigit x )
+        ( x // baseDigit, modBy baseDigit x )
 
 
 dropZeroes : List Int -> List Int

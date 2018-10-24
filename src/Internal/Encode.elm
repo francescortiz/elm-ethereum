@@ -57,8 +57,8 @@ txCall { to, from, gas, gasPrice, value, data } =
 
 {-| -}
 blockId : BlockId -> Value
-blockId blockId =
-    case blockId of
+blockId blockId_ =
+    case blockId_ of
         BlockNum num ->
             Hex.toString num
                 |> add0x
@@ -76,27 +76,27 @@ blockId blockId =
 
 {-| -}
 logFilter : LogFilter -> Value
-logFilter logFilter =
+logFilter logFilter_ =
     object
-        [ ( "fromBlock", blockId logFilter.fromBlock )
-        , ( "toBlock", blockId logFilter.toBlock )
-        , ( "address", address logFilter.address )
-        , ( "topics", topicsList logFilter.topics )
+        [ ( "fromBlock", blockId logFilter_.fromBlock )
+        , ( "toBlock", blockId logFilter_.toBlock )
+        , ( "address", address logFilter_.address )
+        , ( "topics", topicsList logFilter_.topics )
         ]
 
 
 topicsList : List (Maybe Hex) -> Value
-topicsList topicsList =
+topicsList topicsList_ =
     let
         toVal val =
             case val of
-                Just hex ->
-                    string (hexToString hex)
+                Just hex_ ->
+                    string (hexToString hex_)
 
                 Nothing ->
                     null
     in
-    List.map toVal topicsList |> list
+    List.map toVal topicsList_ |> list identity
 
 
 
