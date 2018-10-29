@@ -4,8 +4,8 @@ module Eth exposing
     , getBalance, getTxCount, getBalanceAtBlock, getTxCountAtBlock
     , getBlockNumber, getBlock, getBlockByHash, getBlockWithTxObjs, getBlockByHashWithTxObjs, getBlockTxCount, getBlockTxCountByHash, getUncleCount, getUncleCountByHash, getUncleAtIndex, getUncleByBlockHashAtIndex
     , getLogs, newFilter, newBlockFilter, newPendingTxFilter, getFilterChanges, getFilterLogs, uninstallFilter
-    , sign, protocolVersion, syncing, coinbase, mining, hashrate, accounts
-    , eth_gasPrice, getEvents
+    , sign, protocolVersion, syncing, coinbase, mining, hashrate, gasPrice, accounts
+    , getEvents
     )
 
 {-| Ethereum RPC Methods
@@ -163,11 +163,18 @@ getCodeAtBlock ethNode address blockId =
 Used in `Eth.Sentry.Tx`, a means to interact with MetaMask.
 -}
 toSend : Call a -> Send
-toSend { to, from, gas, gasPrice, value, data, nonce } =
+toSend call_ =
+    let
+        { to, from, gas, value, data, nonce } =
+            call_
+
+        gasPrice_ =
+            call_.gasPrice
+    in
     { to = to
     , from = from
     , gas = gas
-    , gasPrice = gasPrice
+    , gasPrice = gasPrice_
     , value = value
     , data = data
     , nonce = nonce
@@ -177,12 +184,19 @@ toSend { to, from, gas, gasPrice, value, data, nonce } =
 {-| Useful if your handling txParams in javascript land yourself.
 -}
 encodeSend : Send -> Value
-encodeSend { to, from, gas, gasPrice, value, data, nonce } =
+encodeSend call_ =
+    let
+        { to, from, gas, value, data, nonce } =
+            call_
+
+        gasPrice_ =
+            call_.gasPrice
+    in
     Encode.listOfMaybesToVal
         [ ( "to", Maybe.map Encode.address to )
         , ( "from", Maybe.map Encode.address from )
         , ( "gas", Maybe.map Encode.hexInt gas )
-        , ( "gasPrice", Maybe.map Encode.bigInt gasPrice )
+        , ( "gasPrice", Maybe.map Encode.bigInt gasPrice_ )
         , ( "value", Maybe.map Encode.bigInt value )
         , ( "data", Maybe.map Encode.hex data )
         , ( "nonce", Maybe.map Encode.hexInt nonce )
@@ -701,8 +715,8 @@ hashrate ethNode =
 **Note**: not always accurate. See EthGasStation website
 
 -}
-eth_gasPrice : HttpProvider -> Task Http.Error BigInt
-eth_gasPrice ethNode =
+gasPrice : HttpProvider -> Task Http.Error BigInt
+gasPrice ethNode =
     RPC.toTask
         { url = ethNode
         , method = "eth_gasPrice"
