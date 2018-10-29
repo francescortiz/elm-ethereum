@@ -10,7 +10,7 @@ module Legacy.Base58 exposing (decode, encode)
 -}
 
 import Array exposing (Array)
-import Legacy.BigInt as BigInt exposing (BigInt, fromInt)
+import BigInt as BigInt exposing (BigInt, fromInt)
 import String
 
 

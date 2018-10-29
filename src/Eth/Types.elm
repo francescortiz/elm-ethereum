@@ -23,9 +23,9 @@ module Eth.Types exposing
 
 -}
 
+import BigInt as BigInt exposing (BigInt)
 import Internal.Types as Internal
 import Json.Decode exposing (Decoder)
-import Legacy.BigInt as BigInt exposing (BigInt)
 import Time exposing (Posix)
 
 

@@ -1,7 +1,7 @@
 module Abi.Int exposing (fromBinaryUnsafe, fromString, isNegIntUnsafe, toBinaryUnsafe, toString, twosComplementUnsafe)
 
+import BigInt as BigInt exposing (BigInt)
 import Internal.Utils exposing (add0x, remove0x)
-import Legacy.BigInt as BigInt exposing (BigInt)
 import String.Extra as StringExtra
 
 

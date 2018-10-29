@@ -36,6 +36,7 @@ module Eth.Sentry.Event exposing
 
 -}
 
+import BigInt as BigInt
 import Dict exposing (Dict)
 import Eth.Defaults as Default
 import Eth.RPC as RPC
@@ -45,7 +46,6 @@ import Internal.Decode as Decode
 import Internal.Encode as Encode
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Encode as Encode
-import Legacy.BigInt as BigInt
 import PortFunnel.WebSocket as WS
 import Task
 import Time exposing (millisToPosix)
