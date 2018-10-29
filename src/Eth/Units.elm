@@ -32,7 +32,7 @@ Helpers for dealing with floats.
 
 -}
 
-import BigInt as BigInt exposing (BigInt)
+import Legacy.BigInt as BigInt exposing (BigInt)
 import Regex
 
 

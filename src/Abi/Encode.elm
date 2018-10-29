@@ -18,11 +18,11 @@ module Abi.Encode exposing
 -}
 
 import Abi.Int as AbiInt
-import BigInt as BigInt exposing (BigInt)
 import Eth.Types exposing (Address, Hex, IPFSHash)
 import Eth.Utils as EthUtils exposing (functionSig, ipfsToBytes32)
 import Internal.Types as Internal
 import Internal.Utils as IU exposing (..)
+import Legacy.BigInt as BigInt exposing (BigInt)
 
 
 {-| Not yet implemented : Dynamic Bytes, String, List

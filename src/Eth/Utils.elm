@@ -67,7 +67,6 @@ All values coming from the outside world, like user input or server responses, s
 
 -}
 
-import BigInt as BigInt exposing (BigInt)
 import Bool.Extra exposing (all)
 import Char
 import Eth.Types exposing (..)
@@ -78,6 +77,7 @@ import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
 import Keccak exposing (ethereum_keccak_256)
 import Legacy.Base58 as Base58
+import Legacy.BigInt as BigInt exposing (BigInt)
 import Process
 import Regex exposing (Regex)
 import Result.Extra as Result

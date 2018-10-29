@@ -60,7 +60,6 @@ Geth, Parity, and Infura support websockets.
 
 -}
 
-import BigInt as BigInt exposing (BigInt)
 import Eth.RPC as RPC
 import Eth.Types exposing (..)
 import Http
@@ -68,6 +67,7 @@ import Internal.Decode as Decode
 import Internal.Encode as Encode
 import Json.Decode as Decode exposing (Decoder)
 import Json.Encode as Encode exposing (Value)
+import Legacy.BigInt as BigInt exposing (BigInt)
 import Task exposing (Task)
 
 

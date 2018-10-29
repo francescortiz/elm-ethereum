@@ -1,12 +1,12 @@
 module Internal.Decode exposing (address, bigInt, block, blockHash, blockHead, event, hex, hexBool, hexInt, hexTime, log, nonZero, resultToDecoder, stringInt, syncStatus, tx, txHash, txReceipt, uncle)
 
-import BigInt as BigInt exposing (BigInt)
 import Eth.Types exposing (..)
 import Eth.Utils exposing (toAddress, toBlockHash, toHex, toTxHash)
 import Hex
 import Internal.Utils exposing (add0x, remove0x)
 import Json.Decode as Decode exposing (..)
 import Json.Decode.Pipeline exposing (custom, optional, required)
+import Legacy.BigInt as BigInt exposing (BigInt)
 import Time exposing (Posix, millisToPosix)
 
 
