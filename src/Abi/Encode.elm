@@ -23,6 +23,7 @@ import Eth.Utils as EthUtils exposing (functionSig, ipfsToBytes32)
 import Internal.Types as Internal
 import Internal.Utils as IU exposing (..)
 import Legacy.BigInt as BigInt exposing (BigInt)
+import Legacy.Logging
 
 
 {-| Not yet implemented : Dynamic Bytes, String, List
@@ -128,7 +129,7 @@ functionCall_ isDebug sig encodings =
 
         data =
             if isDebug then
-                Debug.log ("Debug Contract Call " ++ sig) data_
+                Legacy.Logging.log ("Debug Contract Call " ++ sig) data_
 
             else
                 data_

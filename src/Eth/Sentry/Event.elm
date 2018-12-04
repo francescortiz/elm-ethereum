@@ -46,6 +46,7 @@ import Internal.Encode as Encode
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Encode as Encode
 import Legacy.BigInt as BigInt
+import Legacy.Logging
 import PortFunnel.WebSocket as WS
 import Task
 import Time exposing (millisToPosix)
@@ -519,7 +520,7 @@ decodeBlockHead val =
             blockHead
 
         Err error ->
-            Debug.log (Debug.toString error) defaultBlockHead
+            Legacy.Logging.log error defaultBlockHead
 
 
 decodeTxHash : Value -> TxHash
@@ -529,7 +530,7 @@ decodeTxHash val =
             txHash
 
         Err error ->
-            Debug.log (Debug.toString error) Default.emptyTxHash
+            Legacy.Logging.log error Default.emptyTxHash
 
 
 
@@ -549,7 +550,7 @@ newBlockHeadsKey =
 debugHelp : { a | debug : Bool } -> String -> b -> b
 debugHelp sentry logText val =
     if sentry.debug then
-        Debug.log ("EventSentry - " ++ logText) val
+        Legacy.Logging.log ("EventSentry - " ++ logText) val
 
     else
         val

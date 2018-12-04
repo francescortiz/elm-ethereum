@@ -52,6 +52,7 @@ import Internal.Utils exposing (..)
 import Json.Decode as Decode exposing (Decoder)
 import Legacy.Base58 as Base58
 import Legacy.BigInt as BigInt exposing (BigInt)
+import Legacy.Logging
 import Result.Extra as ResultExtra
 import String.Extra as StringExtra
 import String.UTF8 as UTF8
@@ -120,7 +121,7 @@ decodeStringWithDebug debug (AbiDecoder abiDecoder) abiString =
         _ =
             case debug of
                 Just function ->
-                    Debug.log ("Debug Contract Call Response " ++ function) abiString
+                    Legacy.Logging.log ("Debug Contract Call Response " ++ function) abiString
 
                 Nothing ->
                     abiString

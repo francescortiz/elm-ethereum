@@ -38,8 +38,10 @@ import Eth.Utils exposing (Retry, retry, txHashToString)
 import Http
 import Json.Decode as Decode exposing (Decoder, Value)
 import Json.Encode as Encode
+import Legacy.Logging
 import Maybe.Extra as Maybe
 import Process
+import String.Conversions
 import Task exposing (Task)
 
 
@@ -237,9 +239,8 @@ update msg (TxSentry sentry) =
             case Dict.get ref sentry.txs of
                 Just txState ->
                     let
-                        _ =
-                            debugHelp sentry.debug log.signed (Debug.toString txHashResult)
-
+                        --                        _ =
+                        --                            debugHelp sentry.debug log.signed (Debug.toString txHashResult)
                         txSignedCmd =
                             case txState.onSignedTagger of
                                 Just txHashToMsg ->
@@ -301,10 +302,10 @@ update msg (TxSentry sentry) =
             -- When Tx has been sucessfully broadcast and verifiably sits within the networks Tx Queue,
             -- AND an "onBroadcastTagger" and/or "onMinedTagger" was provided by the user,
             -- Msg User Land accordingly.
-            let
-                _ =
-                    debugHelp sentry.debug log.broadcast (Debug.toString txResult)
-            in
+            --            let
+            --                _ =
+            --                    debugHelp sentry.debug log.broadcast (Debug.toString txResult)
+            --            in
             case Dict.get ref sentry.txs of
                 Just txState ->
                     case txResult of
@@ -340,10 +341,10 @@ update msg (TxSentry sentry) =
                                 failOtherCallbacks =
                                     case ( txState.onBroadcastTagger, txState.onMinedTagger ) of
                                         ( Just txToMsg, _ ) ->
-                                            Task.perform txToMsg (Task.succeed <| Err <| Debug.toString error)
+                                            Task.perform txToMsg (Task.succeed <| Err <| String.Conversions.fromHttpError error)
 
                                         ( _, Just ( txReceiptToMsg, _ ) ) ->
-                                            Task.perform txReceiptToMsg (Task.succeed <| Err <| Debug.toString error)
+                                            Task.perform txReceiptToMsg (Task.succeed <| Err <| String.Conversions.fromHttpError error)
 
                                         ( Nothing, Nothing ) ->
                                             Cmd.none
@@ -358,10 +359,10 @@ update msg (TxSentry sentry) =
 
         TxMined ref txReceiptResult ->
             -- When Tx is mined because a TxReceipt was returned by the network...
-            let
-                _ =
-                    debugHelp sentry.debug log.mined (Debug.toString txReceiptResult)
-            in
+            --            let
+            --                _ =
+            --                    debugHelp sentry.debug log.mined (Debug.toString txReceiptResult)
+            --            in
             case Dict.get ref sentry.txs of
                 Just txState ->
                     case txReceiptResult of
@@ -413,7 +414,7 @@ update msg (TxSentry sentry) =
                                 cmdIfMinedFail =
                                     case txState.onMinedTagger of
                                         Just ( txReceiptToMsg, _ ) ->
-                                            Task.perform txReceiptToMsg (Task.succeed <| Err <| Debug.toString error)
+                                            Task.perform txReceiptToMsg (Task.succeed <| Err <| String.Conversions.fromHttpError error)
 
                                         Nothing ->
                                             Cmd.none
@@ -449,7 +450,7 @@ update msg (TxSentry sentry) =
                                 |> Task.onError
                                     (\_ ->
                                         Task.succeed <|
-                                            Debug.log
+                                            Legacy.Logging.log
                                                 "TxTracker - Possible Chain ReOrg"
                                                 { newTxTracker | reOrg = True, doneWatching = True }
                                     )
@@ -495,7 +496,7 @@ update msg (TxSentry sentry) =
         TrackTx ref _ (Err error) ->
             let
                 _ =
-                    debugHelp sentry.debug log.trackTx ("Error getting latest block. Info: " ++ Debug.toString error)
+                    debugHelp sentry.debug log.trackTx ("Error getting latest block. Info: " ++ String.Conversions.fromHttpError error)
             in
             ( TxSentry sentry, Cmd.none )
 
@@ -581,10 +582,14 @@ decodeTxData val =
 
                 Nothing ->
                     TxSigned result.ref
-                        (Err <| "Problem signing/broadcasting Tx. Ref #" ++ Debug.toString result.ref)
+                        (Err <| "Problem signing/broadcasting Tx. Ref #" ++ String.fromInt result.ref)
 
         Err error ->
-            ErrorDecoding (Debug.toString error)
+            let
+                _ =
+                    Legacy.Logging.log "error = " error
+            in
+            ErrorDecoding "Error Decoding Transaction Data. Enable debug to analyze."
 
 
 txIdResponseDecoder : Decoder { ref : Int, txHash : Maybe TxHash }
@@ -611,7 +616,7 @@ newTxState send0 { onSign, onBroadcast, onMined } =
 debugHelp : Bool -> String -> a -> a
 debugHelp debug logText val =
     if debug then
-        Debug.log ("TxSentry - " ++ logText) val
+        Legacy.Logging.log ("TxSentry - " ++ logText) val
 
     else
         val

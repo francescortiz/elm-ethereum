@@ -41,6 +41,7 @@ module Legacy.BigInt exposing
 import Basics
 import Hex
 import Legacy.Constants exposing (hexDigitMagnitude, maxDigitMagnitude, maxDigitValue)
+import Legacy.Logging
 import List.Extra
 import Maybe exposing (Maybe)
 import Maybe.Extra
@@ -525,14 +526,24 @@ bigIntToInt_ bigInt =
             b * (10 ^ maxDigitMagnitude) + a
 
         _ ->
-            Debug.todo "No suitable shortcut conversion in hexMagnitudeToString"
+            let
+                _ =
+                    Legacy.Logging.todo
+                        "No suitable shortcut conversion in hexMagnitudeToString."
+            in
+            0
 
 
 hexMagnitudeToString : BigInt -> String
 hexMagnitudeToString bigInt =
     case divmod bigInt eightHexDigits of
         Nothing ->
-            Debug.todo "Failure converting to hex string."
+            let
+                _ =
+                    Legacy.Logging.todo
+                        "Failure converting to hex string."
+            in
+            ""
 
         Just ( d, r ) ->
             let
@@ -561,7 +572,12 @@ mod : BigInt -> BigInt -> BigInt
 mod num den =
     case divmod num den |> Maybe.map Tuple.second of
         Nothing ->
-            Debug.todo "Cannot perform mod 0. Division by zero error."
+            let
+                _ =
+                    Legacy.Logging.todo
+                        "Cannot perform mod 0. Division by zero error."
+            in
+            fromInt 0
 
         Just x ->
             x
